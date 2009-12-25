@@ -65,7 +65,7 @@ enum {
 
 #define AUTHOR		"Giuseppe Calderaro - <giuseppecalderaro@gmail.com>"
 #define LICENSE		"GPL"
-#define VERSION		"1.43"
+#define VERSION		"1.44"
 
 #ifdef MEMMAPPER_C_
 const char *colors[] = {
