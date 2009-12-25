@@ -20,8 +20,8 @@
 #include <sys/io.h>
 #include <stdio.h>
 
-#include "inc/debug_func.h"
-#include "inc/memmapper.h"
+#include <debug_func.h>
+#include <memmapper.h>
 
 void io_rw(unsigned short int port, unsigned long *data, int length, int op)
 {

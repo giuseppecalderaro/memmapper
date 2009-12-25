@@ -1,4 +1,3 @@
-
 OBJS = 	src/memmapper.c	\
 	src/io_func.c		\
 	src/lib_func.c		\
@@ -7,20 +6,21 @@ OBJS = 	src/memmapper.c	\
 
 GCC=gcc
 LDFLAGS=-lm
+INCLUDE_DIR=include
 
 all:
 	@echo -n Compiling memmapper...
-	@$(GCC) $(LDFLAGS) $(OBJS) -o memmapper
+	@$(GCC) -I$(INCLUDE_DIR) $(LDFLAGS) $(OBJS) -o memmapper
 	@echo DONE!
 
 disassemble:
 	@echo -n Compiling memmapper with DISASSEMBLER...
-	@$(GCC) -DDISASM $(LDFLAGS) $(OBJS) /usr/lib/libudis86.a -o memmapper
+	@$(GCC) -DDISASM -I$(INCLUDE_DIR) $(LDFLAGS) $(OBJS) /usr/lib/libudis86.a -o memmapper
 	@echo DONE!
 
 debug:
 	@echo -n Compiling memmapper DEBUG version...
-	@$(GCC) -DDEBUG $(LDFLAGS) $(OBJS) -o memmapper
+	@$(GCC) -DDEBUG -I$(INCLUDE_DIR) $(LDFLAGS) $(OBJS) -o memmapper
 	@echo DONE!
 
 clean:

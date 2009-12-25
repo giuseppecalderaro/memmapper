@@ -22,12 +22,15 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "inc/debug_func.h"
+#include <lib_func.h>
+#include <debug_func.h>
 
 unsigned long hex_encoder(const char *address, int *sign)
 {
 	int base;
 	int length;
+	int unit = 1;
+	char *unit_ptr = NULL;
 	char *number;
 	unsigned long result = 0;
 	int i;
@@ -39,6 +42,22 @@ unsigned long hex_encoder(const char *address, int *sign)
 	
 	/* Initialize sign.  */
 	*sign = 1;
+
+	/* Size is in kilobyte.  */
+	if((unit_ptr = strchr(address, 'k')) || (unit_ptr = strchr(address, 'K'))) {
+		*unit_ptr = 0;
+		unit = KB;
+	}
+	/* Size is in megabyte.  */
+	if((unit_ptr = strchr(address, 'm')) || (unit_ptr = strchr(address, 'M'))) {
+		*unit_ptr = 0;
+		unit = MB;
+	}
+	/* Size is in gigabyte.  */
+	if((unit_ptr = strchr(address, 'g')) || (unit_ptr = strchr(address, 'G'))) {
+		*unit_ptr = 0;
+		unit = GB;
+	}
 	
 	switch(address[0]) {
 	case '0':
@@ -79,8 +98,13 @@ unsigned long hex_encoder(const char *address, int *sign)
 		}
 	}
 	
+	/* Evaluate final result.  */
 	for(i = 0; i < length; i++)
 		result += (unsigned long)number[i] * (unsigned long)pow(base, length - i - 1);
+	/* Apply multiplier.  */
+	printf("result %x - unit %x\n", result, unit);
+	result *= unit;
+	printf("result %x - unit %x\n", result, unit);
 
 	return result;
 }

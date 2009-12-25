@@ -23,10 +23,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "inc/debug_func.h"
-#include "inc/lib_func.h"
-#include "inc/memmapper.h"
-#include "inc/pci_func.h"
+#include <debug_func.h>
+#include <lib_func.h>
+#include <memmapper.h>
+#include <pci_func.h>
 
 /* PCI address decoder.  */
 void decode_pci_address(char *pci_dev, unsigned char *bus, unsigned char *devfn, int *reg)

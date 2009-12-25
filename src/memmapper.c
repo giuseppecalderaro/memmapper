@@ -29,12 +29,12 @@
 #endif
 #include <unistd.h>
 
-#include "inc/debug_func.h"
-#include "inc/io_func.h"
-#include "inc/lib_func.h"
-#include "inc/mem_func.h"
-#include "inc/memmapper.h"
-#include "inc/pci_func.h"
+#include <debug_func.h>
+#include <io_func.h>
+#include <lib_func.h>
+#include <mem_func.h>
+#include <memmapper.h>
+#include <pci_func.h>
 
 void cursor(int on)
 {
@@ -46,6 +46,10 @@ void cursor(int on)
 
 void usage(void)
 {
+	/* Banner.  */
+	printf("Memory mapper version %s\n" "Written by %s\n" "Released under license %s\n\n", VERSION, AUTHOR, LICENSE);
+
+	/* Help.  */
 	printf("memory mapper help.\n"
 	       "./memmapper [--pci | -p] <bus:dev.fn:reg> [--length | -l] <length>\n"
 	       "\treads pci configuration space.\n\n"
@@ -133,9 +137,6 @@ int main(int argc, char **argv)
 	unsigned long data = 0;
 	int sign = 0;
 	int i;
-
-	/* Banner.  */
-	printf("Memory mapper version %s\n" "Written by %s\n" "Released under license %s\n\n", VERSION, AUTHOR, LICENSE);
 	
 	if(argc == 1)
 		usage();

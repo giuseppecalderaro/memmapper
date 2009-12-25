@@ -31,6 +31,10 @@
 #define NIBBLES_PER_WORD str(16)
 #endif
 
+#define KB (1 << 10)
+#define MB (1 << 20)
+#define GB (1 << 30)
+
 unsigned long hex_encoder(const char *address, int *sign);
 
 #endif /*LIB_FUNC_H_*/

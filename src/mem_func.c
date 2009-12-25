@@ -28,10 +28,10 @@
 #include <unistd.h>
 #include <sys/user.h>
 
-#include "inc/debug_func.h"
-#include "inc/lib_func.h"
-#include "inc/mem_func.h"
-#include "inc/memmapper.h"
+#include <debug_func.h>
+#include <lib_func.h>
+#include <mem_func.h>
+#include <memmapper.h>
 
 int memory_rw(unsigned long physical, unsigned long *data, int length, int increment, int op, int fd)
 {
