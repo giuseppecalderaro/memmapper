@@ -102,9 +102,7 @@ unsigned long hex_encoder(const char *address, int *sign)
 	for(i = 0; i < length; i++)
 		result += (unsigned long)number[i] * (unsigned long)pow(base, length - i - 1);
 	/* Apply multiplier.  */
-	printf("result %x - unit %x\n", result, unit);
 	result *= unit;
-	printf("result %x - unit %x\n", result, unit);
 
 	return result;
 }
