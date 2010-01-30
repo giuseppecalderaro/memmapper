@@ -17,8 +17,8 @@
  * 										*
  ********************************************************************************/
 
-#ifndef PCI_FUNC_H_
-#define PCI_FUNC_H_
+#ifndef __PCI_FUNC_H__
+#define __PCI_FUNC_H__
 
 #define PCI_CMD_PORT	0x0CF8
 #define PCI_DATA_PORT	0x0CFC
@@ -84,10 +84,14 @@ enum Status_Register_Bits {
 	Status_Detected_Parity =	0x8000, /* Set on parity error.  */
 };
 
-void decode_pci_address(char *pci_dev, unsigned char *bus, unsigned char *devfn, int *reg);
-unsigned int pci_conf_read(unsigned char bus, unsigned char devfn, unsigned char reg, int len, unsigned long *data);
-void pci_conf_write(unsigned char bus, unsigned char devfn, unsigned char reg, int len, unsigned int data);
-void pci_conf_dump_all(unsigned char bus, unsigned char devfn);
-void pci_rw(unsigned char bus, unsigned char devfn, unsigned char reg, unsigned long *data, int length, int op);
+#ifndef __PCI_FUNC_C__
+#define DECLARE extern
+#else
+#define DECLARE
+#endif
 
-#endif /*PCI_FUNC_H_*/
+DECLARE int register_pci(void **action);
+
+#undef DECLARE
+
+#endif /* __PCI_FUNC_H__  */

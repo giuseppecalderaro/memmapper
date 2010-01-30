@@ -41,7 +41,8 @@ unsigned long hex_encoder(const char *address, int *sign)
 	}
 	
 	/* Initialize sign.  */
-	*sign = 1;
+	if(sign)
+		*sign = 1;
 
 	/* Size is in kilobyte.  */
 	if((unit_ptr = strchr(address, 'k')) || (unit_ptr = strchr(address, 'K'))) {
@@ -74,7 +75,8 @@ unsigned long hex_encoder(const char *address, int *sign)
 	default:
 		base = 10;
 		if(address[0] == '-') {
-			*sign = -1;
+			if (sign)
+				*sign = -1;
 			address++;
 		}
 		number = (char *)address;

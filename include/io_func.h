@@ -17,9 +17,17 @@
  * 										*
  ********************************************************************************/
 
-#ifndef IO_FUNC_H_
-#define IO_FUNC_H_
+#ifndef __IO_FUNC_H__
+#define __IO_FUNC_H__
 
-void io_rw(unsigned short int port, unsigned long *data, int length, int op);
+#ifndef __IO_FUNC_C__
+#define DECLARE extern
+#else
+#define DECLARE
+#endif
+
+DECLARE int register_io(void **action);
+
+#undef DECLARE
 
 #endif /*IO_FUNC_H_*/

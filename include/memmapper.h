@@ -17,30 +17,55 @@
  * 										*
  ********************************************************************************/
 
-#ifndef MEMMAPPER_H_
-#define MEMMAPPER_H_
-
-#define DEVICE		"/dev/mem"
+#ifndef __MEMMAPPER_H__
+#define __MEMMAPPER_H__
 
 #define TRUE 		1
 #define FALSE		0
 
-/* Actions.  */
-#define MEM_OP		0x01
-#define IO_OP		0x02
-#define PCI_OP		0x03
-#define DISASSEMBLE     0x04
+#define FIELD(reg, op)  (reg << op##_OFFSET)       
+#define MASK(op)        ((1 << (op##_OFFSET + op##_WIDTH)) - (1 << op##_OFFSET))
+#define VALUE(reg, op)  ((reg & MASK(op)) >> op##_OFFSET)
+#define NO_OP		(0x00)
 
-/* Ops.  */
-#define READ_ONLY	0x00
-#define WRITE_ONLY	0x01
-#define WRITE_READ	0x02
+/* Operations.  */
+#define CMD_OFFSET      (0)
+#define CMD_WIDTH       (4)
+#define MEM_OP          (0x01)
+#define IO_OP		(0x02)
+#define PCI_OP		(0x03)
+#ifdef DISASM
+#define DISASM_OP       (0x04)
+#endif
+
+#define RW_OFFSET       (CMD_OFFSET + CMD_WIDTH)
+#define RW_WIDTH        (4)
+#define READ_ONLY	(0x00)
+#define WRITE_ONLY	(0x01)
+#define WRITE_READ	(0x02)
 
 /* Colored output.  */
-#define COLORS		0x80
-#define NO_COLORS	0x00
+#define COLOR_OFFSET    (RW_OFFSET + RW_WIDTH)
+#define COLOR_WIDTH     (4)
+#define COLOR_EN	(0x01)
 
-#define ASCII		0x04
+/* Length.  */
+#define LENGTH_OFFSET   (COLOR_OFFSET + COLOR_WIDTH)
+#define LENGTH_WIDTH    (4)
+#define LEN1            (0x00)
+#define LEN2            (0x01)
+#define LEN4            (0x02)
+#define LEN8            (0x03)
+
+/* Ascii output.  */
+#define ASCII_OFFSET    (LENGTH_OFFSET + LENGTH_WIDTH)
+#define ASCII_WIDTH     (4)
+#define ASCII_EN	(0x01)
+
+/* Mem open flags.  */
+#define OPEN_OFFSET     (ASCII_OFFSET + ASCII_WIDTH)
+#define OPEN_WIDTH      (4)
+#define OPEN_SYNC       (0x01)
 
 /* Colors definitions.  */
 enum {
@@ -65,9 +90,9 @@ enum {
 
 #define AUTHOR		"Giuseppe Calderaro - <giuseppecalderaro@gmail.com>"
 #define LICENSE		"GPL"
-#define VERSION		"1.44"
+#define VERSION		"2.00"
 
-#ifdef MEMMAPPER_C_
+#ifdef __MEMMAPPER_C__
 const char *colors[] = {
 		"\033[0m",
 		"\033[0;30m",
@@ -91,7 +116,4 @@ const char *colors[] = {
 extern const char *colors[];
 #endif
 
-void cursor(int on);
-void usage(void);
-
-#endif /*MEMMAPPER_H_*/
+#endif /* __MEMMAPPER_H__  */

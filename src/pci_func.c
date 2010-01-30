@@ -29,7 +29,7 @@
 #include <pci_func.h>
 
 /* PCI address decoder.  */
-void decode_pci_address(char *pci_dev, unsigned char *bus, unsigned char *devfn, int *reg)
+static int decode_pci_address(const char *pci_dev, unsigned char *bus, unsigned char *devfn, int *reg)
 {
 	int sign = 0;
 	char *bus_string;
@@ -38,7 +38,7 @@ void decode_pci_address(char *pci_dev, unsigned char *bus, unsigned char *devfn,
 	char *reg_string;
 	
 	/* pci_dev[2] = pci_dev[5] = pci_dev[7] = pci_dev[strlen(pci_dev)] = 0; */
-	reg_string = pci_dev;
+	reg_string = (char *)pci_dev;
 	bus_string = strsep(&reg_string, ":");	       
 	fn_string = strsep(&reg_string, ":");
 	dev_string = strsep(&fn_string, ".");
@@ -56,31 +56,33 @@ void decode_pci_address(char *pci_dev, unsigned char *bus, unsigned char *devfn,
 }
 
 /* PCI configuration register read.  */
-unsigned int pci_conf_read(unsigned char bus, unsigned char devfn, unsigned char reg, int len, unsigned long *data)
+static unsigned int pci_conf_read(unsigned char bus, unsigned char devfn, unsigned char reg, int len)
 {
+	unsigned int data;
+
 	outl(PCI_ENABLE | (bus << 16) | (devfn << 8) | (reg & ~3), PCI_CMD_PORT);
 
 	switch(len) {
 	case 1:
-		*data = inb(PCI_DATA_PORT + (reg & 3));
+		data = inb(PCI_DATA_PORT + (reg & 3));
 		break;
 	case 2:
-		*data = inw(PCI_DATA_PORT + (reg & 2));
+		data = inw(PCI_DATA_PORT + (reg & 2));
 		break;
 	case 4:
-		*data = inl(PCI_DATA_PORT);
+		data = inl(PCI_DATA_PORT);
 		break;
 	default:
 		printf("Lenght should be 1, 2, 4 bytes.\n");
-		*data = 0;
+		data = 0;
 		break;
 	}
 	
-	return *data;
+	return data;
 }
 
 /* PCI configuration register write.  */
-void pci_conf_write(unsigned char bus, unsigned char devfn, unsigned char reg, int len, unsigned int data)
+static void pci_conf_write(unsigned char bus, unsigned char devfn, unsigned char reg, int len, unsigned int data)
 {
 	outl(PCI_ENABLE | (bus << 16) | (devfn << 8) | (reg & ~3), PCI_CMD_PORT);
 
@@ -98,7 +100,7 @@ void pci_conf_write(unsigned char bus, unsigned char devfn, unsigned char reg, i
 }
 
 /* PCI configuration space dumper.  */
-void pci_conf_dump_all(unsigned char bus, unsigned char devfn)
+static void pci_conf_dump_all(unsigned char bus, unsigned char devfn)
 {
 	unsigned long data = 0;
 	
@@ -106,25 +108,25 @@ void pci_conf_dump_all(unsigned char bus, unsigned char devfn)
 	iopl(3);
 	
 	/* Read VendorID - DeviceID.  */
-	pci_conf_read(bus, devfn, VendorID, 4, &data);
+	data = pci_conf_read(bus, devfn, VendorID, 4);
 	PRINTD("Read data: 0x%lx\n", data);
 	printf("Vendor ID = 0x%.4lx\n"
 			"Device ID = 0x%.4lx\n", data & 0xffff, data >> 16);
 	
 	/* Read Command Register - Status Register.  */
-	pci_conf_read(bus, devfn, CommandReg, 4, &data);
+	data = pci_conf_read(bus, devfn, CommandReg, 4);
 	PRINTD("Read data: 0x%lx\n", data);
 	printf("Command Register = 0x%.4lx\n"
 			"Status Register = 0x%.4lx\n", data & 0xffff, data >> 16);
 	
 	/* Read Revision ID - Class Code.  */
-	pci_conf_read(bus, devfn, RevisionID, 4, &data);
+	data = pci_conf_read(bus, devfn, RevisionID, 4);
 	PRINTD("Read data: 0x%lx\n", data);
 	printf("Revision ID = 0x%.2lx\n"
 			"Class Code = 0x%.4lx\n", data & 0xff, data >> 16);
 	
 	/* Read Cache Line - Latency Timer - Header Type - BIST.  */
-	pci_conf_read(bus, devfn, CacheLine, 4, &data);
+	data = pci_conf_read(bus, devfn, CacheLine, 4);
 	PRINTD("Read data: 0x%lx\n", data);
 	printf("Cache Line = 0x%.2lx\n"
 			"Latency Timer = 0x%.2lx\n"
@@ -133,27 +135,27 @@ void pci_conf_dump_all(unsigned char bus, unsigned char devfn)
 			data & 0xff, (data >> 8) & 0xff, (data >> 16) & 0xff,(data >> 24) & 0xff);
 			
 	/* Read BARs.  */
-	printf("BAR0 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR0, 4, &data));
-	printf("BAR1 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR1, 4, &data));
-	printf("BAR2 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR2, 4, &data));
-	printf("BAR3 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR3, 4, &data));
-	printf("BAR4 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR4, 4, &data));
-	printf("BAR5 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR5, 4, &data));
+	printf("BAR0 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR0, 4));
+	printf("BAR1 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR1, 4));
+	printf("BAR2 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR2, 4));
+	printf("BAR3 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR3, 4));
+	printf("BAR4 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR4, 4));
+	printf("BAR5 = 0x%.8x\n", pci_conf_read(bus, devfn, BAR5, 4));
 	
 	/* Read CardBus CIS Pointer.  */
-	printf("CardBus CIS Pointer = 0x%.8x\n", pci_conf_read(bus, devfn, CardBusCIS, 4, &data));
+	printf("CardBus CIS Pointer = 0x%.8x\n", pci_conf_read(bus, devfn, CardBusCIS, 4));
 	
 	/* Read SubSystemVendorID - SubSystemDeviceID.  */ 
-	pci_conf_read(bus, devfn, SSysVendorID, 4, &data);
+	data = pci_conf_read(bus, devfn, SSysVendorID, 4);
 	PRINTD("Read data: 0x%.4lx\n", data);
 	printf("SubSystem Vendor ID = 0x%.4lx\n"
 			"SubSystem Device ID = 0x%.4lx\n", data & 0xffff, data >> 16);
 	
 	/* Read Expansion ROM Base Address.  */
-	printf("Expansion ROM Base Address = 0x%.8x\n", pci_conf_read(bus, devfn, ExpansionROM, 2, &data));
+	printf("Expansion ROM Base Address = 0x%.8x\n", pci_conf_read(bus, devfn, ExpansionROM, 2));
 	
 	/* Read IRQ Line - IRQ Pin - Min_Gnt - Max_Lat.  */
-	pci_conf_read(bus, devfn, IRQLine, 4, &data);
+	data = pci_conf_read(bus, devfn, IRQLine, 4);
 	printf("IRQ Line = 0x%.2lx\n"
 			"IRQ Pin = 0x%.2lx\n"
 			"Min_Gnt = 0x%.2lx\n"
@@ -161,7 +163,7 @@ void pci_conf_dump_all(unsigned char bus, unsigned char devfn)
 			data & 0xff, (data >> 8) & 0xff, (data >> 16) & 0xff,(data >> 24) & 0xff);	
 }
 
-void pci_rw(unsigned char bus, unsigned char devfn, unsigned char reg, unsigned long *data, int length, int op)
+static void pci_rw(unsigned char bus, unsigned char devfn, unsigned char reg, unsigned long data, int write, int color_en, int length)
 {
 	unsigned long read_data;
 	const char *color;
@@ -169,23 +171,23 @@ void pci_rw(unsigned char bus, unsigned char devfn, unsigned char reg, unsigned 
 	/* Set userspace permission on I/O ports.  */
 	iopl(3);
 	
-	if(op & WRITE_ONLY) {
+	if(write) {
 		PRINTD("PCI write operation.\n");
-		if(op & COLORS)
-			printf("Writing data: " "%s" "0x%lx" "%s" "\n", colors[yellow], *data, colors[default_color]);
+		if(color_en)
+			printf("Writing data: " "%s" "0x%lx" "%s" "\n", colors[yellow], data, colors[default_color]);
 		else
-			printf("Writing data: 0x%lx\n", *data);
+			printf("Writing data: 0x%lx\n", data);
 		
-		pci_conf_write(bus, devfn, reg, length, *data);
+		pci_conf_write(bus, devfn, reg, length, data);
 	} 
 	
-	if(((op & (~COLORS)) == READ_ONLY) || (op & WRITE_READ)) {
+	if((write == READ_ONLY) || (write == WRITE_READ)) {
 		PRINTD("PCI read operation.\n");
-		pci_conf_read(bus, devfn, reg, length, &read_data);
-		if(op & COLORS) {
+		read_data = pci_conf_read(bus, devfn, reg, length);
+		if(color_en) {
 			color = colors[light_cyan];
-			if(op & WRITE_READ) {
-				if(read_data != *data) {
+			if(write == WRITE_READ) {
+				if(read_data != data) {
 					color = colors[red];				
 				} else {
 					color = colors[light_green];
@@ -196,4 +198,51 @@ void pci_rw(unsigned char bus, unsigned char devfn, unsigned char reg, unsigned 
 			printf("Read data: 0x%lx\n", read_data);						
 		}
 	}	
+}
+
+static int pci_op(unsigned long op, const char *resource, const char *device, const char *value)
+{
+	unsigned char bus;
+	unsigned char devfn;
+	int reg;
+	unsigned long data;
+	int color = VALUE(op, COLOR);
+	int length = (1 << VALUE(op, LENGTH));
+	int write = VALUE(op, RW);
+
+	PRINTD("%s: op %.8x - resource %s - device %s - value %s\n",
+	       __FUNCTION__,
+	       op,
+	       resource,
+	       device ? : "No Dev",
+	       value? : "No value");
+
+	/* Decoding of resource string.  */
+	decode_pci_address(resource, &bus, &devfn, &reg);
+
+	/* Value.  */
+	if(value) {
+		data = hex_encoder(value, 0);
+	}
+
+	PRINTD("%s: bus %.4x - devfn %.4x - reg %.8x - value %.8x - length %d - write %d\n",
+	       __FUNCTION__,
+	       bus,
+	       devfn,
+	       reg,
+	       data,
+	       length,
+	       write);
+
+	/* Perform PCI operation.  */
+	pci_rw(bus, devfn, reg, data, write, color, length);
+
+	return EXIT_SUCCESS;
+}
+
+int register_pci(void **action)
+{
+	*action = (void *)pci_op;
+
+	return EXIT_SUCCESS;
 }

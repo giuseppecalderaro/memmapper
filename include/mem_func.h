@@ -17,9 +17,11 @@
  * 										*
  ********************************************************************************/
 
-#ifndef MEM_FUNC_H_
-#define MEM_FUNC_H_
+#ifndef __MEM_FUNC_H__
+#define __MEM_FUNC_H__
 
+#include <memmapper.h>
+#define DEVICE "/dev/mem"
 #define DELETE "\b"
 
 static inline unsigned char readb(void *address)
@@ -62,11 +64,98 @@ static inline void writel(void *address, unsigned long data)
 	*(volatile unsigned long *)address = data;
 }
 
-int memory_rw(unsigned long physical, unsigned long *data, int length, int increment, int op, int fd);
-int memory_dumper(unsigned long from, char sep, unsigned long to, unsigned long *data, int length, int increment, int op, int fd);
+static int memory_rw(unsigned long physical, unsigned long *data, int length, int increment, int write, int fd)
+{
+	void *address;
+	unsigned long read_data = 0;
+	int pagesize;
+	
+	pagesize = sysconf(_SC_PAGESIZE);
+	if(pagesize == -1) {
+		perror("sysconf");
+		return EXIT_FAILURE;
+	}
 
-#ifdef DISASM
-int memory_disassemble(unsigned long from, unsigned long to, int op, int fd);
+	address = mmap(0, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, physical & PAGE_MASK);
+	if(address == MAP_FAILED) {
+		printf("Cannot mmap file descriptor.\n"
+				"quitting...");
+		return EXIT_FAILURE;
+	}
+	
+	if(write) {
+		switch(length) {
+		case 1: 
+			*data &= 0xFF;
+			writeb(address + (physical & (~PAGE_MASK)), *data);
+			if(write & WRITE_READ) {
+				read_data = readb(address + (physical & (~PAGE_MASK)));
+			} else {
+				read_data = *data;
+			}
+			break;
+		case 2:	
+			*data &= 0xFFFF;
+			writew(address + (physical & (~PAGE_MASK)), *data);
+			if(write & WRITE_READ) {
+				read_data = readw(address + (physical & (~PAGE_MASK)));
+			} else {
+				read_data = *data;
+			}
+			break;
+		case 4:
+#ifdef ARCH64
+			*data &= 0xFFFFFFFF;
+			writedw(address + (physical & (~PAGE_MASK)), *data);
+			if(write & WRITE_READ) {
+				read_data = readdw(address + (physical & (~PAGE_MASK)));
+			} else {
+				read_data = *data;
+			}
+			break;
+		case 8:
+#endif
+		default:
+			writel(address + (physical & (~PAGE_MASK)),*data);
+			if(write & WRITE_READ) {
+				read_data = readl(address + (physical & (~PAGE_MASK)));
+			} else {
+				read_data = *data;
+			}
+			break;
+		}
+	} else {
+		switch(length) {
+		case 1:
+			*data = readb(address + (physical & (~PAGE_MASK)));
+			break;
+		case 2:
+			*data = readw(address + (physical & (~PAGE_MASK)));				
+			break;
+		case 4:
+#ifdef ARCH64
+			*data = readdw(address + (physical & (~PAGE_MASK)));			
+			break;
+		case 8:
+#endif
+		default:
+			*data = readl(address + (physical & (~PAGE_MASK)));
+			break;
+		}	
+	}
+	munmap(address, pagesize);
+	
+	return EXIT_SUCCESS;
+}
+
+#ifndef __MEM_FUNC_C__
+#define DECLARE extern
+#else
+#define DECLARE
 #endif
 
-#endif /*MEM_FUNC_H_*/
+DECLARE int register_mem(void **action);
+
+#undef DECLARE
+
+#endif /* __MEM_FUNC_H__  */

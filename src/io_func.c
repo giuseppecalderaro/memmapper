@@ -17,13 +17,14 @@
  * 										*
  ********************************************************************************/
 
+#define __IO_FUNC_C__
 #include <sys/io.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 #include <debug_func.h>
 #include <memmapper.h>
 
-void io_rw(unsigned short int port, unsigned long *data, int length, int op)
+void io_rw(unsigned short int port, unsigned long data, int write, int color_en, int length)
 {
 	const char *color = NULL;
 	unsigned long read_data = 0;
@@ -32,53 +33,53 @@ void io_rw(unsigned short int port, unsigned long *data, int length, int op)
 	iopl(3);
 	
 	/* I/O ports are pow(2, 16).  */
-	if(*data > 0xFFFFFFFF) {
+	if(data > 0xFFFFFFFF) {
 		PRINTD("I/O ports can be at most 32 bits wide, truncating...\n");
-		*data &= 0xFFFFFFFFUL;
+		data &= 0xFFFFFFFFUL;
 	}
 	
-	if(op & COLORS)
+	if(color_en)
 		printf("IO port: " "%s" "0x%.4x\n" "%s", colors[yellow], port, colors[default_color]);
 	else
 		printf("IO port: 0x%.4x\n", port);		
 		
-	if(op & WRITE_ONLY) {
+	if(write) {
 		PRINTD("I/O port write operation.\n");
 		switch(length) {
 		case 1:
-			if(op & COLORS)
-				printf("Writing data: " "%s" "0x%.2lx" "%s" "\n", colors[yellow], *data, colors[default_color]);
+			if(color_en)
+				printf("Writing data: " "%s" "0x%.2lx" "%s" "\n", colors[yellow], data, colors[default_color]);
 			else
-				printf("Writing data: 0x%.2lx\n", *data);
-			outb((unsigned char)*data, port);			
+				printf("Writing data: 0x%.2lx\n", data);
+			outb((unsigned char)data, port);			
 			break;
 		case 2:
-			if(op & COLORS)
-				printf("Writing data: " "%s" "0x%.4lx" "%s" "\n", colors[yellow], *data, colors[default_color]);
+			if(color_en)
+				printf("Writing data: " "%s" "0x%.4lx" "%s" "\n", colors[yellow], data, colors[default_color]);
 			else
-				printf("Writing data: 0x%.4lx\n", *data);
-			outw((unsigned short int)*data, port);			
+				printf("Writing data: 0x%.4lx\n", data);
+			outw((unsigned short int)data, port);			
 			break;
 		case 4:
 		default:
-			if(op & COLORS)
-				printf("Writing data: " "%s" "0x%.8lx" "%s" "\n", colors[yellow], *data, colors[default_color]);
+			if(color_en)
+				printf("Writing data: " "%s" "0x%.8lx" "%s" "\n", colors[yellow], data, colors[default_color]);
 			else
-				printf("Writing data: 0x%.8lx\n", *data);
-			outl(*data, port);			
+				printf("Writing data: 0x%.8lx\n", data);
+			outl(data, port);			
 			break;	
 		}	
 	} 
 
-	if(((op & (~COLORS)) == READ_ONLY) || ((op & (~COLORS)) & WRITE_READ)) {
+	if ((write == READ_ONLY) || (write == WRITE_READ)) {
 		PRINTD("I/O port read operation.\n");
 		color = colors[light_cyan];
 		switch(length) {
 		case 1:
 			read_data = inb(port);
-			if(op & COLORS) {
-				if(op & WRITE_READ) {
-					if(read_data != *data) {
+			if(color_en) {
+				if(write == WRITE_READ) {
+					if(read_data != data) {
 						color = colors[red];				
 					} else {
 						color = colors[light_green];
@@ -91,9 +92,9 @@ void io_rw(unsigned short int port, unsigned long *data, int length, int op)
 			break;
 		case 2:
 			read_data = inw(port);
-			if(op & COLORS) {
-				if(op & WRITE_READ) {
-					if(read_data != *data) {
+			if(color_en) {
+				if(write == WRITE_READ) {
+					if(read_data != data) {
 						color = colors[red];				
 					} else {
 						color = colors[light_green];
@@ -107,9 +108,9 @@ void io_rw(unsigned short int port, unsigned long *data, int length, int op)
 		case 4:
 		default:
 			read_data = inl(port);
-			if(op & COLORS) {
-				if(op & WRITE_READ) {
-					if(read_data != *data) {
+			if(color_en) {
+				if(write == WRITE_READ) {
+					if(read_data != data) {
 						color = colors[red];				
 					} else {
 						color = colors[light_green];
@@ -122,4 +123,45 @@ void io_rw(unsigned short int port, unsigned long *data, int length, int op)
 			break;	
 		}			
 	}
+}
+
+static int io_op(unsigned long op, const char *resource, const char *device, const char *value)
+{
+	unsigned short int port;
+	unsigned long data;
+	int color = VALUE(op, COLOR);
+	int length = (1 << VALUE(op, LENGTH));
+	int write = VALUE(op, RW);
+
+	PRINTD("%s: op %.8x - resource %s - device %s - value %s\n",
+	       __FUNCTION__,
+	       op,
+	       resource,
+	       device ? : "No Dev",
+	       value? : "No value");
+
+	/* Decode resources.  */
+	port = hex_encoder(resource, 0);
+	if(value)
+		data = hex_encoder(value, 0);
+
+	PRINTD("%s: port %#x - data %#x - length %#x - write %#x - color %#x\n",
+	       __FUNCTION__,
+	       port,
+	       data,
+	       length,
+	       write,
+	       color);
+
+	/* Perform requested operation.  */
+	io_rw(port, data, write, color, length);
+
+	return EXIT_SUCCESS;
+}
+
+int register_io(void **action)
+{
+	*action = (void *)io_op;
+
+	return EXIT_SUCCESS;
 }
