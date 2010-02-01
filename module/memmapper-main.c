@@ -3,7 +3,6 @@
 #include <linux/mman.h>
 #include <linux/device.h>
 #include <linux/kprobes.h>
-#include <linux/moduleparam.h>
 #include <memmapper-main.h>
 
 static int memmapper_major_number;
@@ -46,7 +45,7 @@ static struct kretprobe memmapper_probe = {
 };
 #endif
 
-int memmapper_load(void)
+int __init memmapper_load(void)
 {
 	int __ret;      
 
@@ -77,7 +76,7 @@ int memmapper_load(void)
 	return 0;
 }
 
-void memmapper_unload(void)
+void __exit memmapper_unload(void)
 {
 #ifdef CONFIG_KRETPROBES
 	if(kprobe) {
