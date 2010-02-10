@@ -20,4 +20,4 @@ clean:
 
 # Rule
 %.o: src/%.c
-	@$(GCC) -c -I$(INCLUDE_DIR) $(LDFLAGS) $< -o $@
+	@$(GCC) -c -I$(INCLUDE_DIR) $< -o $@
