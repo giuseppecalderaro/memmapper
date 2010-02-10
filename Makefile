@@ -9,6 +9,8 @@ OBJS= 				\
 	pci_func.o
 
 all: $(OBJS)
+	@$(GCC) -I$(INCLUDE_DIR) $(LDFLAGS) -o memmapper $(OBJS) 
+	@-rm -f *.o 
 
 .PHONY: clean
 clean:
@@ -17,5 +19,5 @@ clean:
 	@echo DONE!
 
 # Rule
-$(OBJS): %.o: src/%.c
-	$(GCC) -c -I$(INCLUDE_DIR) $(LDFLAGS) $< -o $@
+%.o: src/%.c
+	@$(GCC) -c -I$(INCLUDE_DIR) $< -o $@
