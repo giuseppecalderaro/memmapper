@@ -26,6 +26,12 @@
 #include <debug_func.h>
 #include <memmapper.h>
 
+#ifdef DISASM
+#define OPTS_LIST "ac:d:f:hi:l:m:o:p:su:w:"
+#else
+#define OPTS_LIST "ac:d:f:hi:l:m:o:p:sw:"
+#endif
+
 static void cursor(int on)
 {
 	if(on)
@@ -126,7 +132,7 @@ int main(int argc, char **argv)
 	cursor(FALSE);
 
 	while(1) {
-		option = getopt_long(argc, argv, "ac:d:f:hi:l:m:o:p:su:w:", long_options, &option_index);
+		option = getopt_long(argc, argv, OPTS_LIST, long_options, &option_index);
 		if (option == -1)
 			break;
 			
@@ -256,7 +262,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	/* Set user identity.  */
+	/* Set user identity. */
 	if(setuid(0) == -1) {
 		printf("You do NOT have root privileges, moron!\n");
 		goto end;

@@ -6,26 +6,28 @@ OBJS= 				\
 	io_func.o 		\
 	lib_func.o		\
 	mem_func.o		\
-	pci_func.o
+	pci_func.o		\
+	disasm_func.o
 
-all: $(OBJS)
+ifeq ($(DISASM),y)
+DISASM_DEFS=-DDISASM
+DISASM_LIBS=/usr/lib/libudis86.a
+else
+DISASM_DEFS=
+DISASM_LIBS=
+endif
+
+ifeq ($(DEBUG),y)
+DEBUG_DEFS=-DDEBUG
+else
+DEBUG_DEFS=
+endif
+
+all: clean $(OBJS)
 	@echo -n Compiling memmapper...
-	@$(GCC) -I$(INCLUDE_DIR) $(LDFLAGS) -o memmapper $(OBJS) 
-	@-rm -f *.o 
-	@echo DONE!
-
-disassemble: $(OBJS)
-	@echo -n Compiling memmapper with DISASSEMBLER...
-	@$(GCC) -DDISASM -I$(INCLUDE_DIR) $(LDFLAGS) $(OBJS) /usr/lib/libudis86.a -o memmapper
+	@$(GCC) $(LDFLAGS) $(OBJS) $(DISASM_LIBS) -o memmapper
 	@-rm -f *.o
 	@echo DONE!
-
-debug: $(OBJS)
-	@echo -n Compiling memmapper DEBUG version...
-	@$(GCC) -DDEBUG -I$(INCLUDE_DIR) $(LDFLAGS) $(OBJS) -o memmapper
-	@-rm -f *.o
-	@echo DONE!
-
 
 .PHONY: clean
 clean:
@@ -35,4 +37,4 @@ clean:
 
 # Rule
 %.o: src/%.c
-	@$(GCC) -c -I$(INCLUDE_DIR) $< -o $@
+	@$(GCC) $(DEBUG_DEFS) $(DISASM_DEFS) -c -I$(INCLUDE_DIR) $< -o $@
