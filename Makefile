@@ -11,7 +11,7 @@ OBJS= 				\
 
 ifeq ($(DISASM),y)
 DISASM_DEFS=-DDISASM
-DISASM_LIBS=/usr/lib/libudis86.a
+DISASM_LIBS=-ludis86
 else
 DISASM_DEFS=
 DISASM_LIBS=
