@@ -1,4 +1,4 @@
-GCC=gcc
+GCC=${CROSS_COMPILE}gcc
 LDFLAGS=-lm
 INCLUDE_DIR=include
 OBJS= 				\

@@ -69,14 +69,16 @@ static int memory_rw(unsigned long physical, unsigned long *data, int length, in
 	void *address;
 	unsigned long read_data = 0;
 	int pagesize;
+	unsigned long page_mask;
 	
 	pagesize = sysconf(_SC_PAGESIZE);
 	if(pagesize == -1) {
 		perror("sysconf");
 		return EXIT_FAILURE;
 	}
+	page_mask = (~(pagesize - 1));
 
-	address = mmap(0, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, physical & PAGE_MASK);
+	address = mmap(0, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, physical & page_mask);
 	if(address == MAP_FAILED) {
 		printf("Cannot mmap file descriptor.\n"
 				"quitting...");
@@ -87,18 +89,18 @@ static int memory_rw(unsigned long physical, unsigned long *data, int length, in
 		switch(length) {
 		case 1: 
 			*data &= 0xFF;
-			writeb(address + (physical & (~PAGE_MASK)), *data);
+			writeb(address + (physical & (~page_mask)), *data);
 			if(write & WRITE_READ) {
-				read_data = readb(address + (physical & (~PAGE_MASK)));
+				read_data = readb(address + (physical & (~page_mask)));
 			} else {
 				read_data = *data;
 			}
 			break;
 		case 2:	
 			*data &= 0xFFFF;
-			writew(address + (physical & (~PAGE_MASK)), *data);
+			writew(address + (physical & (~page_mask)), *data);
 			if(write & WRITE_READ) {
-				read_data = readw(address + (physical & (~PAGE_MASK)));
+				read_data = readw(address + (physical & (~page_mask)));
 			} else {
 				read_data = *data;
 			}
@@ -106,9 +108,9 @@ static int memory_rw(unsigned long physical, unsigned long *data, int length, in
 		case 4:
 #ifdef ARCH64
 			*data &= 0xFFFFFFFF;
-			writedw(address + (physical & (~PAGE_MASK)), *data);
+			writedw(address + (physical & (~page_mask)), *data);
 			if(write & WRITE_READ) {
-				read_data = readdw(address + (physical & (~PAGE_MASK)));
+				read_data = readdw(address + (physical & (~page_mask)));
 			} else {
 				read_data = *data;
 			}
@@ -116,9 +118,9 @@ static int memory_rw(unsigned long physical, unsigned long *data, int length, in
 		case 8:
 #endif
 		default:
-			writel(address + (physical & (~PAGE_MASK)),*data);
+			writel(address + (physical & (~page_mask)),*data);
 			if(write & WRITE_READ) {
-				read_data = readl(address + (physical & (~PAGE_MASK)));
+				read_data = readl(address + (physical & (~page_mask)));
 			} else {
 				read_data = *data;
 			}
@@ -127,19 +129,19 @@ static int memory_rw(unsigned long physical, unsigned long *data, int length, in
 	} else {
 		switch(length) {
 		case 1:
-			*data = readb(address + (physical & (~PAGE_MASK)));
+			*data = readb(address + (physical & (~page_mask)));
 			break;
 		case 2:
-			*data = readw(address + (physical & (~PAGE_MASK)));				
+			*data = readw(address + (physical & (~page_mask)));				
 			break;
 		case 4:
 #ifdef ARCH64
-			*data = readdw(address + (physical & (~PAGE_MASK)));			
+			*data = readdw(address + (physical & (~page_mask)));			
 			break;
 		case 8:
 #endif
 		default:
-			*data = readl(address + (physical & (~PAGE_MASK)));
+			*data = readl(address + (physical & (~page_mask)));
 			break;
 		}	
 	}
