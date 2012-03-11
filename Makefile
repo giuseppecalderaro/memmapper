@@ -25,7 +25,7 @@ endif
 
 all: clean $(OBJS)
 	@echo -n Compiling memmapper...
-	@$(GCC) $(LDFLAGS) $(OBJS) $(DISASM_LIBS) -o memmapper
+	@$(GCC) $(OBJS) $(LDFLAGS) $(DISASM_LIBS) -o memmapper
 	@-rm -f *.o
 	@echo DONE!
 
@@ -37,4 +37,4 @@ clean:
 
 # Rule
 %.o: src/%.c
-	@$(GCC) $(DEBUG_DEFS) $(DISASM_DEFS) -c -I$(INCLUDE_DIR) $< -o $@
+	@$(GCC) $(DEBUG_DEFS) $(DISASM_DEFS) -I$(INCLUDE_DIR) -c $< -o $@
